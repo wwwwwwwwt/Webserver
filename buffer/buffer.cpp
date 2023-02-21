@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-02-21 16:15:58
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-02-21 19:46:10
+ * @LastEditTime: 2023-02-21 19:57:18
  * @FilePath: /Webserver/buffer/buffer.cpp
  */
 
@@ -97,7 +97,7 @@ void Buffer::HasWritten(size_t len){
 
 void Buffer::MakeSpace_(size_t len){
     assert(len >= 0);
-    if(WriteableBytes() + PrependableBytes() < len) {
+    if(WriteableBytes() + PrependableBytes() < len + CheapPrepend) {
         buffer_.resize(writeidx_ + len + 1);
     }
     else{
