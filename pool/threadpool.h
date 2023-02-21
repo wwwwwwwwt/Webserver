@@ -2,10 +2,11 @@
  * @Author: zzzzztw
  * @Date: 2023-02-20 12:53:39
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-02-20 14:01:20
+ * @LastEditTime: 2023-02-21 16:15:25
  * @FilePath: /Webserver/pool/threadpool.h
  */
-#pragma once
+#ifndef THREADPOOL_H
+#define THREADPOOL_H
 
 #include <mutex>
 #include <condition_variable>
@@ -45,6 +46,16 @@ public:
 
         ThreadPool(ThreadPool &&) = default;
 
+        ~ThreadPool(){
+            if(static_cast<bool>(pool_)){
+                {
+                    std::lock_guard<std::mutex>locker(pool_->mtx_);
+                    pool_->isclose = true;
+                }
+                pool_->cond_.notify_all();
+            }
+        }
+
         template<typename T>
         void AddTask(T && task){
             {
@@ -67,4 +78,4 @@ private:
 
     std::shared_ptr<Pool> pool_;
 };
-
+#endif // THREADPOOL_H
