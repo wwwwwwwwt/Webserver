@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "type_traits": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "unordered_map": "cpp"
     }
 }

@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-02-21 14:29:13
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-02-21 18:04:58
+ * @LastEditTime: 2023-02-22 15:14:48
  * @FilePath: /Webserver/buffer/buffer.h
  */
 
@@ -15,12 +15,13 @@
 #include <sys/uio.h> //readv
 #include <vector>
 #include <cstring>
+#include <string>
 #include <atomic>
 #include <algorithm>
 
 class Buffer{
 public:
-    explicit Buffer(int initBufferSize = 1024);
+    explicit Buffer(size_t initBufferSize = 1024);
     ~Buffer();
 
 
@@ -55,7 +56,7 @@ public:
 
 private:
     char* Beginidx_(){ return &*buffer_.begin(); }//返回buffer起始地址
-    const char* Beginidx_()const { &*buffer_.begin(); };
+    const char* Beginidx_()const { return &*buffer_.begin(); };
     void MakeSpace_(size_t len);// 调整buffer空间
 
 private:

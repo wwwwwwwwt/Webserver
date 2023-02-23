@@ -2,13 +2,14 @@
  * @Author: zzzzztw
  * @Date: 2023-02-21 16:15:58
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-02-21 19:57:18
+ * @LastEditTime: 2023-02-21 20:11:56
  * @FilePath: /Webserver/buffer/buffer.cpp
  */
 
 #include "buffer.h"
 
-Buffer::Buffer(int initBufferSize):buffer_(initBufferSize + CheapPrepend),readidx_(CheapPrepend),writeidx_(CheapPrepend){
+
+Buffer::Buffer(size_t initBufferSize):buffer_(initBufferSize + CheapPrepend),readidx_(CheapPrepend),writeidx_(CheapPrepend){
     assert(ReadableBytes() == 0);
     assert(WriteableBytes() == initBufferSize);
     assert(PrependableBytes() == CheapPrepend);
@@ -119,12 +120,12 @@ ssize_t Buffer::ReadFd(int fd, int* saveErrno){
     vec[1].iov_base = tempbuf;
     vec[1].iov_len = sizeof(tempbuf);
     const ssize_t iovcnt = (writable < sizeof tempbuf) ? 2:1;//65536 字节已经可以满足千兆网络  0.5微秒内全速收到的数据 65KB/0.5μs = 125MB/s
-    const ssize_t len = readv(fd,vec,2);
+    const ssize_t len = readv(fd,vec,iovcnt);
 
     if(len < 0){//出错
         *saveErrno = errno;
     }
-    else if(static_cast<int>(len) < writable){//读的长度小于可读长度，临时buf中无数据
+    else if(static_cast<size_t>(len) <= writable){//读的长度小于可读长度，临时buf中无数据
         writeidx_ += len; 
     }
     else{
@@ -143,4 +144,10 @@ ssize_t Buffer::WriteFd(int fd, int* saveErrno){
     }
     readidx_ += len;
     return len;
+}
+
+const char* Buffer::FindCRLF()const{
+    const char CRLF[] = "\r\n";
+    const char* crlf = std::search(Peek(),BeginWriteConst(),CRLF,CRLF+2);
+    return crlf == BeginWriteConst() ? nullptr:crlf;
 }
