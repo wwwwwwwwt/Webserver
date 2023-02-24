@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-02-23 15:11:51
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-02-23 17:38:35
+ * @LastEditTime: 2023-02-23 19:09:50
  * @FilePath: /Webserver/pool/sqlconnpool.h
  */
 #ifndef SQLCONNPOOL_H
@@ -32,7 +32,8 @@ public:
 private:
     SqlConnPool();
     ~SqlConnPool();
-
+    SqlConnPool(const SqlConnPool & s) = delete;
+    SqlConnPool& operator=(const SqlConnPool& sql) = delete;
     int MaxConn_;
     int UseCount_;
     int FreeCount_;

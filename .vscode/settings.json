@@ -2,6 +2,10 @@
     "files.associations": {
         "type_traits": "cpp",
         "iostream": "cpp",
-        "unordered_map": "cpp"
+        "unordered_map": "cpp",
+        "condition_variable": "cpp",
+        "atomic": "cpp",
+        "ostream": "cpp",
+        "*.tcc": "cpp"
     }
 }
