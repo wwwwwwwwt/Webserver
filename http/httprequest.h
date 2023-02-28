@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-02-23 13:18:10
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-02-24 14:54:22
+ * @LastEditTime: 2023-02-28 20:13:05
  * @FilePath: /Webserver/http/httprequest.h
  */
 #ifndef HTTPREQUEST_H
@@ -17,6 +17,8 @@
 #include <mysql/mysql.h>
 
 #include "../buffer/buffer.h"
+#include "../pool/sqlconnRAII.h"
+#include "../pool/sqlconnpool.h"
 
 class HttpRequest{
 public:
@@ -38,29 +40,29 @@ public:
         CLOSED_CONNECTION,//连接关闭
     };
     HttpRequest(){ Init(); };
-    ~HttpRequest();
+    ~HttpRequest() = default;
     void Init();
     bool Parse(Buffer &buff);//根据状态机解析报文
 
     std::string path()const;
     std::string& path();
     std::string method()const;
-    std::string version();
+    std::string version()const;
     std::string GetPost(const std::string& key)const;
     std::string GetPost(const char* key)const;
     bool IsKeepAlive() const;
 private:
 
     bool ParseLine_(const std::string& line);//解析请求行
-    bool ParseHeader_(const std::string& line);//解析请求头
-    bool ParseBody_(const std::string& line);//解析请求体
+    void ParseHeader_(const std::string& line);//解析请求头
+    void ParseBody_(const std::string& line);//解析请求体
     void ParsePath_();//解析资源路径
-    void ParseURLcode_();//解析用户名密码
+    void ParseURLencode_();//解析用户名密码
     bool UserVerify_(const std::string &name, const std::string &pwd, bool islogin);//验证
     void ParsePost_();//解析用户登录注册信息
 
 
-    PARSE_STATE state_;
+    PARSE_STATE state_;//解析的状态
     std::unordered_map<std::string, std::string>header_;
     std::unordered_map<std::string, std::string>post_;
     std::string method_,path_,version_,body_;
