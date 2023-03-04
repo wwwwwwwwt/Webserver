@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-01 14:00:27
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-01 21:31:56
+ * @LastEditTime: 2023-03-04 13:55:15
  * @FilePath: /Webserver/http/httpconn.h
  */
 #ifndef HTTPCONN_H
@@ -43,9 +43,10 @@ public:
         return request_.IsKeepAlive();
     }
 
-    static std::atomic<int> userCount_;
+    //静态变量，被所有对象共享
+    static std::atomic<int> userCount_;//当前连接进来的数量
     static bool isET_;
-    static const char * srcDir_;
+    static const char * srcDir_;//资源的目录
 private:
     int fd_;// 通信的文件描述符
     struct sockaddr_in addr_;
