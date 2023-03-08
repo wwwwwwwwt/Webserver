@@ -2,11 +2,11 @@
  * @Author: zzzzztw
  * @Date: 2023-02-23 15:12:04
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-07 22:28:20
+ * @LastEditTime: 2023-03-08 13:07:06
  * @FilePath: /Webserver/code/pool/sqlconnpool.cpp
  */
 #include "./sqlconnpool.h"
-
+#include <iostream>
 using namespace std;
 
 SqlConnPool::SqlConnPool(){
@@ -35,6 +35,7 @@ void SqlConnPool::Init(const char* host,int port,const char* user,const char* pw
 
         if(!sql){
             //log
+
         }
         conQue_.push(sql);
     }

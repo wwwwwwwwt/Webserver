@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-02-24 14:46:56
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-08 09:34:20
+ * @LastEditTime: 2023-03-08 13:48:41
  * @FilePath: /Webserver/code/http/httprequest.cpp
  */
 
@@ -28,8 +28,12 @@ void HttpRequest::Init(){
 bool HttpRequest::Parse(Buffer &buff){
     if(buff.ReadableBytes() <= 0) return false;
     while(buff.ReadableBytes()&&state_ != FINISH){
-        const char * lineEnd = buff.FindCRLF();
+        const char CRLF[] = "\r\n";
+        //返回第一个\r\n位置,search()
+        const char* lineEnd = std::search(buff.Peek(),buff.BeginWriteConst(),CRLF,CRLF+2);
+       //const char * lineEnd = buff.FindCRLF();
         std::string line(buff.Peek(),lineEnd);
+
         switch(state_){
             case REQUEST_LINE:
                 if(!ParseLine_(line)){
@@ -45,6 +49,7 @@ bool HttpRequest::Parse(Buffer &buff){
                 break;
             case BODY:
                 ParseBody_(line);
+                        
                 break;
             default:
                 break;
@@ -52,7 +57,6 @@ bool HttpRequest::Parse(Buffer &buff){
         if(lineEnd == buff.BeginWrite()){break;}
         buff.RetrieveToEnd(lineEnd + 2);
     }
-    cout<<method_.c_str()<<" " <<path_.c_str()<<" " <<version_.c_str()<<endl;
     return true;
 }
 
@@ -82,9 +86,12 @@ void HttpRequest::ParseHeader_(const string& line){
 }
 
 void HttpRequest::ParseBody_(const string& line) {
+    
     body_ = line;
+
     ParsePost_();
     state_ = FINISH;
+
 }
 
 int HttpRequest::ConverHex(char ch) {
@@ -211,6 +218,8 @@ void HttpRequest::ParsePost_() {//表单数据，和登录有关sql
 bool HttpRequest::UserVerify_(const string& name,const string& pwd, bool islogin){
     if(name == ""|| pwd == "")return false;
     /*log*/
+
+
     MYSQL* sql;
     SqlconnRAII(&sql,SqlConnPool::Instance());
 
@@ -220,7 +229,10 @@ bool HttpRequest::UserVerify_(const string& name,const string& pwd, bool islogin
     MYSQL_FIELD *fields = nullptr;
     MYSQL_RES *res = nullptr;
     unsigned int idx = 0;
-    snprintf(order,256,"select username,password from user where username = '%s',limit 1",name.c_str());
+    if(!islogin){
+        flag = true;
+    }
+    snprintf(order,256,"SELECT username, password FROM user WHERE username='%s' LIMIT 1", name.c_str());
     if(mysql_query(sql,order)){
         mysql_free_result(res);
         return false;

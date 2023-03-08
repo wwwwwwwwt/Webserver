@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-01 14:58:02
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-08 09:51:58
+ * @LastEditTime: 2023-03-08 13:19:04
  * @FilePath: /Webserver/code/http/httpconn.cpp
  */
 #include "./httpconn.h"
@@ -40,7 +40,7 @@ void HttpConn::Close(){
         isClose_ = true;
         userCount_--;
         close(fd_);
-    /*log*/std::cout<<"closefd"<<std::endl;
+    /*log*/
     }
 }
 
@@ -79,7 +79,6 @@ bool HttpConn::process(){//进行对请求和响应的处理
     }
     else if(request_.Parse(readBuff_)){//根据请求状态机依次解析请求报文，将资源/路径/是否保持连接/成功码 传入响应报文初始化
         /*log*/
-        cout<<request_.path().c_str()<<" "<<endl;
         response_.Init(srcDir,request_.path(),request_.IsKeepAlive(),200);
     }
     else{
@@ -118,7 +117,7 @@ ssize_t HttpConn::write(int *saveError){// 响应报文，将写缓冲区的消�
         }
         if(iov_[0].iov_len + iov_[1].iov_len == 0){break;}
         else if(static_cast<size_t>(len) > iov_[0].iov_len ){
-            iov_[1].iov_base = (uint8_t *)iov_[1].iov_base + len - iov_[0].iov_len;
+            iov_[1].iov_base = (uint8_t *)iov_[1].iov_base + (len - iov_[0].iov_len);
             iov_[1].iov_len -= (len - iov_[0].iov_len);
             if(iov_[0].iov_len){
                 writeBuff_.RetrieveAll();

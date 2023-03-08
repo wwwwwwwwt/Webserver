@@ -2,20 +2,14 @@
  * @Author: zzzzztw
  * @Date: 2023-02-21 16:15:58
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-08 09:57:54
+ * @LastEditTime: 2023-03-08 13:48:17
  * @FilePath: /Webserver/code/buffer/buffer.cpp
  */
 
 #include "buffer.h"
 
 
-Buffer::Buffer(size_t initBufferSize):buffer_(initBufferSize + CheapPrepend),readidx_(CheapPrepend),writeidx_(CheapPrepend){
-    assert(ReadableBytes() == 0);
-    assert(WriteableBytes() == initBufferSize);
-    assert(PrependableBytes() == CheapPrepend);
-}
-
-Buffer::~Buffer(){}
+Buffer::Buffer(size_t initBufferSize):buffer_(initBufferSize),readidx_(0),writeidx_(0){}
 
 size_t Buffer::ReadableBytes()const{
 
@@ -36,8 +30,8 @@ const char* Buffer::Peek()const{
 
 void Buffer::RetrieveAll(){
     bzero(&buffer_[0],buffer_.size());
-    readidx_ = CheapPrepend;
-    writeidx_ = CheapPrepend;
+    readidx_ = 0;
+    writeidx_ = 0;
 }
 
 void Buffer::Retrievelen(size_t len){
@@ -98,13 +92,13 @@ void Buffer::HasWritten(size_t len){
 
 void Buffer::MakeSpace_(size_t len){
     assert(len >= 0);
-    if(WriteableBytes() + PrependableBytes() < len + CheapPrepend) {
+    if(WriteableBytes() + PrependableBytes() < len ) {
         buffer_.resize(writeidx_ + len + 1);
     }
     else{
         const size_t readable = ReadableBytes();
         std::copy(Beginidx_() + readidx_, Beginidx_() + writeidx_, Beginidx_());
-        readidx_ = CheapPrepend;
+        readidx_ = 0;
         writeidx_ = readidx_ + readable;
         assert(ReadableBytes() == readable);
     }
@@ -119,8 +113,8 @@ ssize_t Buffer::ReadFd(int fd, int* saveErrno){
     vec[0].iov_len = writable;
     vec[1].iov_base = tempbuf;
     vec[1].iov_len = sizeof(tempbuf);
-    const ssize_t iovcnt = (writable < sizeof tempbuf) ? 2:1;//65536 字节已经可以满足千兆网络  0.5微秒内全速收到的数据 65KB/0.5μs = 125MB/s
-    const ssize_t len = readv(fd,vec,iovcnt);
+  //  const ssize_t iovcnt = (writable < sizeof tempbuf) ? 2:1;//65536 字节已经可以满足千兆网络  0.5微秒内全速收到的数据 65KB/0.5μs = 125MB/s
+    const ssize_t len = readv(fd,vec,2);
 
     if(len < 0){//出错
         *saveErrno = errno;
@@ -144,10 +138,4 @@ ssize_t Buffer::WriteFd(int fd, int* saveErrno){
     }
     readidx_ += len;
     return len;
-}
-
-const char* Buffer::FindCRLF()const{
-    const char CRLF[] = "\r\n";
-    const char* crlf = std::search(Peek(),BeginWriteConst(),CRLF,CRLF+2);
-    return crlf == BeginWriteConst() ? nullptr:crlf;
 }

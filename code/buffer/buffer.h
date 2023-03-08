@@ -2,8 +2,8 @@
  * @Author: zzzzztw
  * @Date: 2023-02-21 14:29:13
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-02-22 15:14:48
- * @FilePath: /Webserver/buffer/buffer.h
+ * @LastEditTime: 2023-03-08 13:48:46
+ * @FilePath: /Webserver/code/buffer/buffer.h
  */
 
 #ifndef BUFFER_H
@@ -21,8 +21,8 @@
 
 class Buffer{
 public:
-    explicit Buffer(size_t initBufferSize = 1024);
-    ~Buffer();
+    Buffer(size_t initBufferSize = 1024);
+    ~Buffer() = default;
 
 
     size_t ReadableBytes()const; //可读字节数
@@ -51,7 +51,6 @@ public:
 
 
 
-    const char* FindCRLF()const; //返回第一个\r\n位置,search()
 
 
 private:
@@ -63,7 +62,6 @@ private:
     std::vector<char> buffer_;
     std::atomic<size_t> readidx_;
     std::atomic<size_t> writeidx_;
-    static const size_t CheapPrepend = 8;
 };
 
 #endif // BUFFER_H
