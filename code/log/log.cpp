@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-09 21:48:40
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-11 17:00:56
+ * @LastEditTime: 2023-03-12 13:35:02
  * @FilePath: /Webserver/code/log/log.cpp
  */
 
@@ -91,7 +91,7 @@ void Log::init(int  level = 1, const char* path, const char* suffix, int safeQue
 void Log::write(int level, const char* format,...)
 {
     struct timeval now = {0,0};
-    gettimeofday(&now,nullptr);
+    //gettimeofday(&now,nullptr);
     time_t tSec = now.tv_sec;
     struct tm *sysTime = localtime(&tSec);
 
