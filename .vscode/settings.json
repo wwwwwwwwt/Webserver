@@ -61,6 +61,11 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "io_context": "cpp"
+        "io_context": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "executor": "cpp",
+        "timer": "cpp",
+        "future": "cpp"
     }
 }
