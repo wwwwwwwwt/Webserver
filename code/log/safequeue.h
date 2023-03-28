@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-09 14:00:30
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-12 13:38:07
+ * @LastEditTime: 2023-03-28 18:37:35
  * @FilePath: /Webserver/code/log/safequeue.h
  */
 
@@ -14,6 +14,7 @@
 #include <queue>
 #include <chrono>
 #include <cassert>
+#include <iostream>
 template <typename T>
 class Safequeue
 {
@@ -27,8 +28,6 @@ public:
     Safequeue &operator=(Safequeue &&s) = default;
 
     void close();
-
-    void clean();
 
     void enqueue(const T& t);
 
@@ -70,7 +69,6 @@ Safequeue<T>::Safequeue(size_t maxCapacity):capacity_(maxCapacity)
 template<typename T>
 Safequeue<T>::~Safequeue()
 {
-    std::lock_guard<std::mutex>locker(mtx_);
     close();
 }
 
@@ -79,58 +77,53 @@ void Safequeue<T>::close()
 {
     {
         std::lock_guard<std::mutex>locker(mtx_);
-        clean();
+        while(!que_.empty())que_.pop();
         isClose_ = true;
     }
     condCumsumer_.notify_all();
     condProducer_.notify_all();
 }
 
-template<typename T>
-void Safequeue<T>::clean()
-{
-    std::lock_guard<std::mutex>locker(mtx_);
-    while(!que_.empty())que_.pop();
-}
 
 template<typename T>
 void Safequeue<T>::enqueue(const T& t)
 {
-    std::lock_guard<std::mutex>locker(mtx_);
+    std::unique_lock<std::mutex>locker(mtx_);
     condProducer_.wait(locker,[&]{
         if(isClose_)return true;
-        return !full();
+        return que_.size() < capacity_;
     });
     if(isClose_)return;
     que_.emplace(t);
-    condProducer_.notify_one();
+    condCumsumer_.notify_all();
 }
 
 template<typename T>
 void Safequeue<T>::enqueue(T&& t)
 {
-    std::lock_guard<std::mutex>locker(mtx_);
+    std::unique_lock<std::mutex>locker(mtx_);
     condProducer_.wait(locker,[&]{
         if(isClose_)return true;
-        return !full();
+        return que_.size() < capacity_;
     });
     if(isClose_)return;
     que_.emplace(t);
-    condProducer_.notify_one();
+    condCumsumer_.notify_all();
 }
 
 template<typename T>
 bool Safequeue<T>::dequeue(T& t)
 {
-    std::lock_guard<std::mutex>locker(mtx_);
+    std::unique_lock<std::mutex>locker(mtx_);
     condCumsumer_.wait(locker,[&]{
         if(isClose_)return true;
-        return !empty();
+        return !que_.empty();
     });
     if(isClose_)return false;
     t = std::move(que_.front());
     que_.pop();
-    condCumsumer_.notify_one();
+    condProducer_.notify_all();
+
     return true;
 }
 

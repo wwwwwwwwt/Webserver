@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-05 16:15:26
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-08 08:51:47
+ * @LastEditTime: 2023-03-15 18:11:03
  * @FilePath: /Webserver/code/server/webserver.cpp
  */
 
@@ -11,8 +11,9 @@
 Webserver::Webserver(
         int port, int trigMod, int timeoutMs, bool optlinger, 
         int sqlport, const char* sqlUser, const char * sqlpwd,
-        const char* dbname, int connPoolnum, int threadnum)
-        :port_(port),timeoutMs_(timeoutMs),openLinger_(optlinger),threadpool_(new ThreadPool(threadnum)),epoller_(new Epoller()),timer_(new HeapTimer())
+        const char* dbname, int connPoolnum, int threadnum,
+        bool openLog, int logLevel, int logQueSize):port_(port),timeoutMs_(timeoutMs),
+        openLinger_(optlinger),isClose_(false),threadpool_(new ThreadPool(threadnum)),epoller_(new Epoller()),timer_(new HeapTimer())
     {   
         srcDir_ = getcwd(nullptr,256);
         assert(srcDir_ != nullptr);
@@ -28,7 +29,21 @@ Webserver::Webserver(
         if(!InitSocket_()){
             isClose_ = true;
         }
-        
+            //日志相关
+        if(openLog) {//判断是否打开日志
+            Log::Instance()->init(logLevel, "./log", ".log", logQueSize);//初始化单例，输出路径，后缀，日志异步队列容量
+            if(isClose_) { LOG_ERROR("========== Server init error!=========="); }
+            else {
+                LOG_INFO("========== Server init ==========");
+                LOG_INFO("Port:%d, OpenLinger: %s", port_, optlinger? "true":"false");
+                LOG_INFO("Listen Mode: %s, OpenConn Mode: %s",
+                                (listenEvent_ & EPOLLET ? "ET": "LT"),
+                                (connEvent_ & EPOLLET ? "ET": "LT"));
+                LOG_INFO("LogSys level: %d", logLevel);
+                LOG_INFO("srcDir: %s", HttpConn::srcDir);
+                LOG_INFO("SqlConnPool num: %d, ThreadPool num: %d", connPoolnum, threadnum);
+            }
+        }
     }
 
 Webserver::~Webserver(){
@@ -41,7 +56,7 @@ Webserver::~Webserver(){
 
 void Webserver::start(){
     int timeMS = -1;  /* epoll wait timeout == -1 无事件将阻塞 */
-    if(!isClose_) { /*loh*/ }
+    if(!isClose_) { LOG_INFO("========== Server start =========="); }
     while(!isClose_) {//循环监听有无事件到达
         //解决超时连接
         if(timeoutMs_> 0) {
@@ -70,7 +85,7 @@ void Webserver::start(){
                 assert(users_.count(fd) > 0);
                 DealWrite_(&users_[fd]);//加入到线程池threadpool->onwrite处理写操作
             } else {
-                /*log*/
+                LOG_ERROR("Unexpected event");
             }
         }
     }    
@@ -205,7 +220,7 @@ void Webserver::InitEventMode_(int trigMod)
 
 void Webserver::CloseConn_(HttpConn* client){
     assert(client);
-    /*log*/
+    LOG_INFO("Client[%d] quit!", client->GetFd());
 
     epoller_->DelFd(client->GetFd());
     client->Close();
@@ -221,7 +236,7 @@ void Webserver::AddClient_(int fd, sockaddr_in addr){
     epoller_->AddFd(fd, connEvent_ | EPOLLIN);
     SetNoBlock(fd);
 
-    /*log*/
+    LOG_INFO("Client[%d] in!", users_[fd].GetFd());
 }
 
 void Webserver :: DealListen_(){
@@ -235,7 +250,7 @@ void Webserver :: DealListen_(){
         }
         else if(HttpConn::userCount_ >= MAX_FD){
             SendError_(fd, "server busy");
-            /*LOG*/
+            LOG_WARN("Clients is full!");
             return;
         }
         AddClient_(fd,addr);
@@ -305,7 +320,7 @@ void Webserver::SendError_(int fd, const char*info) {
     assert(fd > 0);
     int ret = send(fd, info, strlen(info), 0);
     if(ret < 0) {
-       /*log*/
+       LOG_WARN("send error to client[%d] error!", fd);
     }
     close(fd);
 }

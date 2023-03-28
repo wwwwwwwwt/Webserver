@@ -2,8 +2,8 @@
  * @Author: zzzzztw
  * @Date: 2023-02-20 12:53:39
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-02-21 16:15:25
- * @FilePath: /Webserver/pool/threadpool.h
+ * @LastEditTime: 2023-03-15 19:16:52
+ * @FilePath: /Webserver/code/pool/threadpool.h
  */
 #ifndef THREADPOOL_H
 #define THREADPOOL_H
@@ -21,7 +21,7 @@ public:
         web框架作为i/o密集型，线程数 = ncpu*（1+阻塞时间/计算时间）一般取2Ncpu
         计算密集型 ncpu +1
     */
-    explicit ThreadPool(size_t threadcount = 8):pool_(std::make_shared<Pool>()){
+    explicit ThreadPool(size_t threadcount = 4):pool_(std::make_shared<Pool>()){
         assert(threadcount > 0);
 
         for(size_t i = 0;i < threadcount; i++){

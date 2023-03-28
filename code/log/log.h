@@ -2,7 +2,7 @@
  * @Author: zzzzztw
  * @Date: 2023-03-09 18:00:16
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-11 16:54:34
+ * @LastEditTime: 2023-03-12 15:31:32
  * @FilePath: /Webserver/code/log/log.h
  */
 #ifndef LOG_H
@@ -13,7 +13,7 @@
 #include <thread>
 #include <stdarg.h> //##__VA_ARGS__
 #include <sys/stat.h> //mkdir
-#include <time.h>
+#include <sys/time.h>
 #include <chrono>
 
 #include "./safequeue.h"
@@ -29,6 +29,7 @@ public:
    
     static Log * Instance(); //单例
 
+    static void FlushWritethread();
     void flush();
 
     int GetLevel();
@@ -38,7 +39,7 @@ public:
     void write(int level, const char* format, ...);
     
    
-    bool isOpen();
+    bool isOpen(){ return isOpen_; };
 
 private:
     Log();
@@ -69,7 +70,7 @@ private:
 
     bool isAsync_;
 
-    FILE* fd;
+    FILE* fd;// fopen, fclose
     std::unique_ptr<std::thread>writeThread_;
     std::unique_ptr<Safequeue<std::string>>queue_;
     std::mutex mtx_;
@@ -88,7 +89,7 @@ private:
 
 #define LOG_DEBUG(format,...)do{LOG_BASE(0,format,##__VA_ARGS__)}while(0);
 #define LOG_INFO(format,...)do{LOG_BASE(1,format,##__VA_ARGS__)}while(0);
-#define LOG_WARN(format,...)do{LOG_BASE(2,format,##_VA_ARGS__)}while(0);
-#define LOG_ERROR(format,...)do{LOG_BASE(3,format,##_VA_ARGS__)}while(0);
+#define LOG_WARN(format,...)do{LOG_BASE(2,format,##__VA_ARGS__)}while(0);
+#define LOG_ERROR(format,...)do{LOG_BASE(3,format,##__VA_ARGS__)}while(0);
 
 #endif

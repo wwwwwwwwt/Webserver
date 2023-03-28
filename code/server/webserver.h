@@ -2,8 +2,8 @@
  * @Author: zzzzztw
  * @Date: 2023-03-04 13:11:11
  * @LastEditors: Do not edit
- * @LastEditTime: 2023-03-07 22:15:51
- * @FilePath: /Webserver/server/webserver.h
+ * @LastEditTime: 2023-03-12 15:28:18
+ * @FilePath: /Webserver/code/server/webserver.h
  */
 #ifndef WEBSERVER_H
 #define WEBSERVER_H
@@ -22,12 +22,13 @@
 #include "../pool/sqlconnRAII.h"
 #include "../pool/threadpool.h"
 #include "../timer/heaptimer.h"
+#include "../log/log.h"
 
 class Webserver{
 public:
     Webserver(
         int port, int trigMod, int timeoutMs, bool optlinger, int sqlport, const char* sqlUser, const char * sqlpwd,
-        const char* dbname, int connPoolnum, int threadnum);
+        const char* dbname, int connPoolnum, int threadnum,bool openLog, int logLevel, int logQueSize);
     ~Webserver();
     void start();
 
